@@ -6,18 +6,18 @@ import {IERC4626} from "./interfaces/IERC4626.sol";
 import {ERC20} from "./utils/ERC20.sol";
 
 contract MockERC4626 is ERC20, IERC4626 {
-    IERC20 public immutable underlying;
+    IERC20 public immutable UNDERLYING;
 
     constructor(IERC20 asset_, string memory name_, string memory symbol_) ERC20(name_, symbol_, 6) {
-        underlying = asset_;
+        UNDERLYING = asset_;
     }
 
     function asset() external view returns (address) {
-        return address(underlying);
+        return address(UNDERLYING);
     }
 
     function totalAssets() public view returns (uint256) {
-        return underlying.balanceOf(address(this));
+        return UNDERLYING.balanceOf(address(this));
     }
 
     function convertToShares(uint256 assets) public view returns (uint256) {
@@ -59,7 +59,7 @@ contract MockERC4626 is ERC20, IERC4626 {
     function deposit(uint256 assets, address receiver) public virtual returns (uint256) {
         require(assets > 0, "ZERO_ASSETS");
         uint256 shares = convertToShares(assets);
-        require(underlying.transferFrom(msg.sender, address(this), assets), "TRANSFER_FAIL");
+        require(UNDERLYING.transferFrom(msg.sender, address(this), assets), "TRANSFER_FAIL");
         _mint(receiver, shares);
         emit Deposit(msg.sender, receiver, assets, shares);
         return shares;
@@ -67,7 +67,7 @@ contract MockERC4626 is ERC20, IERC4626 {
 
     function mint(uint256 shares, address receiver) external returns (uint256) {
         uint256 assets = _previewMint(shares);
-        require(underlying.transferFrom(msg.sender, address(this), assets), "TRANSFER_FAIL");
+        require(UNDERLYING.transferFrom(msg.sender, address(this), assets), "TRANSFER_FAIL");
         _mint(receiver, shares);
         emit Deposit(msg.sender, receiver, assets, shares);
         return assets;
@@ -83,7 +83,7 @@ contract MockERC4626 is ERC20, IERC4626 {
             }
         }
         _burn(owner, shares);
-        require(underlying.transfer(receiver, assets), "TRANSFER_FAIL");
+        require(UNDERLYING.transfer(receiver, assets), "TRANSFER_FAIL");
         emit Withdraw(msg.sender, receiver, owner, assets, shares);
         return shares;
     }
@@ -98,7 +98,7 @@ contract MockERC4626 is ERC20, IERC4626 {
         }
         uint256 assets = convertToAssets(shares);
         _burn(owner, shares);
-        require(underlying.transfer(receiver, assets), "TRANSFER_FAIL");
+        require(UNDERLYING.transfer(receiver, assets), "TRANSFER_FAIL");
         emit Withdraw(msg.sender, receiver, owner, assets, shares);
         return assets;
     }

@@ -33,7 +33,7 @@ contract MultiStrategyVault is ERC20, AccessControl, Pausable {
         bool claimed;
     }
 
-    IERC20 public immutable assetToken;
+    IERC20 public immutable ASSET_TOKEN;
 
     StrategyConfig[] private _strategies;
     mapping(address => bool) public isStrategy;
@@ -60,18 +60,18 @@ contract MultiStrategyVault is ERC20, AccessControl, Pausable {
     event WithdrawalClaimed(uint256 indexed requestId, address indexed owner, uint256 assets);
 
     constructor(IERC20 asset_) ERC20("Multi Strategy Vault", "MSV", 6) {
-        assetToken = asset_;
+        ASSET_TOKEN = asset_;
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(MANAGER_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
     }
 
     function asset() external view returns (address) {
-        return address(assetToken);
+        return address(ASSET_TOKEN);
     }
 
     function totalAssets() public view returns (uint256) {
-        uint256 assets = assetToken.balanceOf(address(this));
+        uint256 assets = ASSET_TOKEN.balanceOf(address(this));
         uint256 length = _strategies.length;
         for (uint256 i = 0; i < length; i++) {
             StrategyConfig memory cfg = _strategies[i];
@@ -109,7 +109,7 @@ contract MultiStrategyVault is ERC20, AccessControl, Pausable {
     function deposit(uint256 assets, address receiver) external whenNotPaused returns (uint256) {
         require(assets > 0, "ZERO_ASSETS");
         uint256 shares = convertToShares(assets);
-        require(assetToken.transferFrom(msg.sender, address(this), assets), "TRANSFER_FAIL");
+        require(ASSET_TOKEN.transferFrom(msg.sender, address(this), assets), "TRANSFER_FAIL");
         _mint(receiver, shares);
         emit Deposit(msg.sender, receiver, assets, shares);
         return shares;
@@ -117,7 +117,7 @@ contract MultiStrategyVault is ERC20, AccessControl, Pausable {
 
     function mint(uint256 shares, address receiver) external whenNotPaused returns (uint256) {
         uint256 assets = _previewMint(shares, totalAssets(), totalSupply);
-        require(assetToken.transferFrom(msg.sender, address(this), assets), "TRANSFER_FAIL");
+        require(ASSET_TOKEN.transferFrom(msg.sender, address(this), assets), "TRANSFER_FAIL");
         _mint(receiver, shares);
         emit Deposit(msg.sender, receiver, assets, shares);
         return assets;
@@ -150,12 +150,12 @@ contract MultiStrategyVault is ERC20, AccessControl, Pausable {
         uint256 assets = _convertToAssets(shares, totalBefore, supply);
         _burn(msg.sender, shares);
 
-        uint256 cashAssets = assetToken.balanceOf(address(this));
+        uint256 cashAssets = ASSET_TOKEN.balanceOf(address(this));
         uint256 assetsRemaining = assets;
 
         uint256 cashPortion = (assets * cashAssets) / totalBefore;
         if (cashPortion > 0) {
-            require(assetToken.transfer(msg.sender, cashPortion), "TRANSFER_FAIL");
+            require(ASSET_TOKEN.transfer(msg.sender, cashPortion), "TRANSFER_FAIL");
             assetsRemaining -= cashPortion;
         }
 
@@ -184,15 +184,15 @@ contract MultiStrategyVault is ERC20, AccessControl, Pausable {
                 requestId = _recordWithdrawal(msg.sender, cfg.strategy, strategyShares, portion, readyAt);
             } else {
                 IERC4626(cfg.strategy).withdraw(portion, address(this), address(this));
-                require(assetToken.transfer(msg.sender, portion), "TRANSFER_FAIL");
+                require(ASSET_TOKEN.transfer(msg.sender, portion), "TRANSFER_FAIL");
             }
             assetsRemaining -= portion;
         }
 
         if (assetsRemaining > 0) {
-            uint256 cashBalance = assetToken.balanceOf(address(this));
+            uint256 cashBalance = ASSET_TOKEN.balanceOf(address(this));
             if (cashBalance >= assetsRemaining) {
-                require(assetToken.transfer(msg.sender, assetsRemaining), "TRANSFER_FAIL");
+                require(ASSET_TOKEN.transfer(msg.sender, assetsRemaining), "TRANSFER_FAIL");
                 assetsRemaining = 0;
             } else if (firstLocked != address(0)) {
                 uint256 strategyShares = IERC4626(firstLocked).previewWithdraw(assetsRemaining);
@@ -236,7 +236,7 @@ contract MultiStrategyVault is ERC20, AccessControl, Pausable {
             StrategyConfig calldata cfg = configs[i];
             require(cfg.strategy != address(0), "ZERO_STRATEGY");
             require(cfg.targetBps <= MAX_BPS_PER_PROTOCOL, "CAP_EXCEEDED");
-            require(IERC4626(cfg.strategy).asset() == address(assetToken), "ASSET_MISMATCH");
+            require(IERC4626(cfg.strategy).asset() == address(ASSET_TOKEN), "ASSET_MISMATCH");
             totalBps += cfg.targetBps;
             require(totalBps <= MAX_BPS, "BPS_OVERFLOW");
             _strategies.push(cfg);
@@ -248,7 +248,7 @@ contract MultiStrategyVault is ERC20, AccessControl, Pausable {
 
     function rebalance() external onlyRole(MANAGER_ROLE) whenNotPaused {
         uint256 total = totalAssets();
-        uint256 cash = assetToken.balanceOf(address(this));
+        uint256 cash = ASSET_TOKEN.balanceOf(address(this));
         uint256 length = _strategies.length;
 
         for (uint256 i = 0; i < length; i++) {
@@ -262,7 +262,7 @@ contract MultiStrategyVault is ERC20, AccessControl, Pausable {
                     toDeposit = cash;
                 }
                 if (toDeposit > 0) {
-                    assetToken.approve(cfg.strategy, toDeposit);
+                    ASSET_TOKEN.approve(cfg.strategy, toDeposit);
                     IERC4626(cfg.strategy).deposit(toDeposit, address(this));
                     cash -= toDeposit;
                 }
@@ -309,7 +309,7 @@ contract MultiStrategyVault is ERC20, AccessControl, Pausable {
     }
 
     function _withdrawImmediate(uint256 assets, address receiver) internal {
-        uint256 liquid = assetToken.balanceOf(address(this));
+        uint256 liquid = ASSET_TOKEN.balanceOf(address(this));
         uint256 length = _strategies.length;
         for (uint256 i = 0; i < length; i++) {
             StrategyConfig memory cfg = _strategies[i];
@@ -321,10 +321,10 @@ contract MultiStrategyVault is ERC20, AccessControl, Pausable {
         require(assets <= liquid, "LOCKED_LIQUIDITY");
 
         uint256 remaining = assets;
-        uint256 cashBalance = assetToken.balanceOf(address(this));
+        uint256 cashBalance = ASSET_TOKEN.balanceOf(address(this));
         if (cashBalance > 0) {
             uint256 pay = cashBalance >= remaining ? remaining : cashBalance;
-            require(assetToken.transfer(receiver, pay), "TRANSFER_FAIL");
+            require(ASSET_TOKEN.transfer(receiver, pay), "TRANSFER_FAIL");
             remaining -= pay;
         }
 
@@ -339,7 +339,7 @@ contract MultiStrategyVault is ERC20, AccessControl, Pausable {
             }
             uint256 toWithdraw = remaining > available ? available : remaining;
             IERC4626(cfg.strategy).withdraw(toWithdraw, address(this), address(this));
-            require(assetToken.transfer(receiver, toWithdraw), "TRANSFER_FAIL");
+            require(ASSET_TOKEN.transfer(receiver, toWithdraw), "TRANSFER_FAIL");
             remaining -= toWithdraw;
         }
 

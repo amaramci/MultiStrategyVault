@@ -52,7 +52,7 @@ contract MultiStrategyVaultTest is Test {
         assertApproxEqAbs(usdc.balanceOf(user), 660e6, 2);
         assertEq(vault.pendingAssets(user), 400e6);
 
-        vm.warp(block.timestamp + strategyB.lockupDuration() + 1);
+        vm.warp(block.timestamp + strategyB.LOCKUP_DURATION() + 1);
 
         vm.startPrank(user);
         vault.claimWithdraw(requestId);
