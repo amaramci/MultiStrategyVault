@@ -6,11 +6,7 @@ import {IERC20} from "./IERC20.sol";
 interface IERC4626 is IERC20 {
     event Deposit(address indexed caller, address indexed owner, uint256 assets, uint256 shares);
     event Withdraw(
-        address indexed caller,
-        address indexed receiver,
-        address indexed owner,
-        uint256 assets,
-        uint256 shares
+        address indexed caller, address indexed receiver, address indexed owner, uint256 assets, uint256 shares
     );
 
     function asset() external view returns (address);

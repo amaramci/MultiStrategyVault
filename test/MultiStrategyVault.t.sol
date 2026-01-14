@@ -22,16 +22,9 @@ contract MultiStrategyVaultTest is Test {
         vault = new MultiStrategyVault(usdc);
 
         MultiStrategyVault.StrategyConfig[] memory configs = new MultiStrategyVault.StrategyConfig[](2);
-        configs[0] = MultiStrategyVault.StrategyConfig({
-            strategy: address(strategyA),
-            targetBps: 6_000,
-            isLocked: false
-        });
-        configs[1] = MultiStrategyVault.StrategyConfig({
-            strategy: address(strategyB),
-            targetBps: 4_000,
-            isLocked: true
-        });
+        configs[0] =
+            MultiStrategyVault.StrategyConfig({strategy: address(strategyA), targetBps: 6_000, isLocked: false});
+        configs[1] = MultiStrategyVault.StrategyConfig({strategy: address(strategyB), targetBps: 4_000, isLocked: true});
         vault.setAllocations(configs);
     }
 
@@ -70,11 +63,8 @@ contract MultiStrategyVaultTest is Test {
 
     function testAllocationCap() public {
         MultiStrategyVault.StrategyConfig[] memory configs = new MultiStrategyVault.StrategyConfig[](1);
-        configs[0] = MultiStrategyVault.StrategyConfig({
-            strategy: address(strategyA),
-            targetBps: 7_000,
-            isLocked: false
-        });
+        configs[0] =
+            MultiStrategyVault.StrategyConfig({strategy: address(strategyA), targetBps: 7_000, isLocked: false});
 
         vm.expectRevert("CAP_EXCEEDED");
         vault.setAllocations(configs);

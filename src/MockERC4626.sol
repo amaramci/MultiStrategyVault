@@ -8,9 +8,7 @@ import {ERC20} from "./utils/ERC20.sol";
 contract MockERC4626 is ERC20, IERC4626 {
     IERC20 public immutable underlying;
 
-    constructor(IERC20 asset_, string memory name_, string memory symbol_)
-        ERC20(name_, symbol_, 6)
-    {
+    constructor(IERC20 asset_, string memory name_, string memory symbol_) ERC20(name_, symbol_, 6) {
         underlying = asset_;
     }
 

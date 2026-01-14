@@ -8,9 +8,7 @@ contract MockLockedStrategy is MockERC4626 {
     uint256 public immutable lockupDuration;
     mapping(address => uint256) public lastDepositTime;
 
-    constructor(IERC20 asset_, uint256 lockupDuration_)
-        MockERC4626(asset_, "Mock Locked Vault", "mLOCK")
-    {
+    constructor(IERC20 asset_, uint256 lockupDuration_) MockERC4626(asset_, "Mock Locked Vault", "mLOCK") {
         lockupDuration = lockupDuration_;
     }
 

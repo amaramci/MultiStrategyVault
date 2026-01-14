@@ -47,11 +47,7 @@ contract MultiStrategyVault is ERC20, AccessControl, Pausable {
     event Rebalanced(address indexed manager);
     event Deposit(address indexed caller, address indexed owner, uint256 assets, uint256 shares);
     event Withdraw(
-        address indexed caller,
-        address indexed receiver,
-        address indexed owner,
-        uint256 assets,
-        uint256 shares
+        address indexed caller, address indexed receiver, address indexed owner, uint256 assets, uint256 shares
     );
     event WithdrawalRequested(
         uint256 indexed requestId,
@@ -296,13 +292,10 @@ contract MultiStrategyVault is ERC20, AccessControl, Pausable {
         return _strategies[index];
     }
 
-    function _recordWithdrawal(
-        address owner,
-        address strategy,
-        uint256 strategyShares,
-        uint256 assets,
-        uint256 readyAt
-    ) internal returns (uint256 requestId) {
+    function _recordWithdrawal(address owner, address strategy, uint256 strategyShares, uint256 assets, uint256 readyAt)
+        internal
+        returns (uint256 requestId)
+    {
         requestId = nextRequestId++;
         withdrawalRequests[requestId] = WithdrawalRequest({
             owner: owner,
