@@ -1,4 +1,4 @@
-# Multi-Strategy Vault (Take-Home Assignment)
+# Multi-Strategy Vault 
 
 An ERC4626-style vault that allocates deposits across multiple strategies, supports locked liquidity, and provides a withdrawal request queue for locked protocols.
 
